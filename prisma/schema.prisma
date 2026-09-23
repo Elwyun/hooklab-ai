@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum HookCategory {
+  EMOTIONAL
+  CURIOSITY
+  STATISTICAL
+  PROBLEM_SOLUTION
+  AIDA
+  PAS
+  BEFORE_AFTER_BRIDGE
+  FAB
+}
+
+enum ReadabilityLevel {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Platform {
+  META
+  TIKTOK
+  INSTAGRAM
+  YOUTUBE_SHORTS
+}
+
+enum Tone {
+  PROFESSIONAL
+  CASUAL
+  URGENT
+  HUMOROUS
+  LUXURY
+  EMPATHETIC
+  CUSTOM
+}
+
+enum GenerationAction {
+  GENERATE
+  EXPORT
+  COPY
+  BOOKMARK
+  REMIX
+}
+
+// ─────────────────────────────────────────────
+// TABLES
+// ─────────────────────────────────────────────
+
+model User {
+  id            Int       @id @default(autoincrement())
+  uuid          String    @unique @default(uuid())
+  name          String?   @db.VarChar(100)
+  email         String    @unique @db.VarChar(150)
+  passwordHash  String?   @map("password_hash") @db.VarChar(255)
+  emailVerified DateTime? @map("email_verified")
+  image         String?   @db.VarChar(500)
+  role          UserRole  @default(USER)
+  isActive      Boolean   @default(true) @map("is_active")
+  lastLogin     DateTime? @map("last_login")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  projects  Project[]
+  favorites Favorite[]
+  usageLogs UsageLog[]
+  accounts  Account[]
+  sessions  Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  type              String   @db.VarChar(50)
+  provider          String   @db.VarChar(100)
+  providerAccountId String   @map("provider_account_id") @db.VarChar(100)
+  refreshToken      String?  @map("refresh_token") @db.Text
+  accessToken       String?  @map("access_token") @db.Text
+  expiresAt         Int?     @map("expires_at")
+  tokenType         String?  @map("token_type") @db.VarChar(50)
+  scope             String?  @db.VarChar(200)
+  idToken           String?  @map("id_token") @db.Text
+  sessionState      String?  @map("session_state") @db.VarChar(200)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique @map("session_token") @db.VarChar(255)
+  userId       Int      @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String  @db.VarChar(200)
+  token      String  @unique @db.VarChar(255)
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid())
+  userId      Int       @map("user_id")
+  name        String    @map("name") @db.VarChar(150)
+  description String?   @db.Text
+  isArchived  Boolean   @default(false) @map("is_archived")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generations Generation[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model Generation {
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique @default(uuid())
+  projectId          Int       @map("project_id")
+  productName        String    @map("product_name") @db.VarChar(150)
+  productDescription String    @map("product_description") @db.Text
+  targetAudience     String    @map("target_audience") @db.VarChar(255)
+  tone               Tone      @default(PROFESSIONAL)
+  platform           Platform  @default(META)
+  language           String    @default("id") @db.VarChar(10)
+  videoDuration      String?   @map("video_duration") @db.VarChar(10)
+  modelUsed          String?   @map("model_used") @db.VarChar(50)
+  tokensUsed         Int       @default(0) @map("tokens_used")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  deletedAt          DateTime? @map("deleted_at")
+
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  hookOutputs HookOutput[]
+
+  @@index([projectId])
+  @@index([platform])
+  @@map("generations")
+}
+
+model HookOutput {
+  id               Int               @id @default(autoincrement())
+  uuid             String            @unique @default(uuid())
+  generationId     Int               @map("generation_id")
+  category         HookCategory      @default(EMOTIONAL)
+  hookText         String            @map("hook_text") @db.Text
+  hookLength       Int               @default(0) @map("hook_length")
+  readabilityScore ReadabilityLevel  @default(EASY) @map("readability_score")
+  isFavorite       Boolean           @default(false) @map("is_favorite")
+  isArchived       Boolean           @default(false) @map("is_archived")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  deletedAt        DateTime?         @map("deleted_at")
+
+  generation Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  favorites  Favorite[]
+
+  @@index([generationId])
+  @@index([category])
+  @@map("hook_outputs")
+}
+
+model Favorite {
+  id            Int      @id @default(autoincrement())
+  uuid          String   @unique @default(uuid())
+  userId        Int      @map("user_id")
+  hookOutputId  Int      @map("hook_output_id")
+  collectionName String? @map("collection_name") @db.VarChar(100)
+  note          String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hookOutput HookOutput @relation(fields: [hookOutputId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hookOutputId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model UsageLog {
+  id              Int              @id @default(autoincrement())
+  userId          Int              @map("user_id")
+  action          GenerationAction
+  tokensConsumed  Int              @default(0) @map("tokens_consumed")
+  modelUsed       String?          @map("model_used") @db.VarChar(50)
+  ipAddress       String?          @map("ip_address") @db.VarChar(45)
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("usage_logs")
+}
