@@ -29,6 +29,8 @@ credentials-based authentication, and a dashboard for tracking generation activi
 
 <img src="./docs/screenshots/mobile-flow.png" alt="HookLab AI mobile flow" width="330" />
 
+All three are captured from the running app — regenerate them at any time with `npm run screenshots`.
+
 ---
 
 ## ✨ Features
@@ -188,6 +190,7 @@ prisma/
 | `npm run build` | Production build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | ESLint |
+| `npm run screenshots` | Regenerate the README screenshots (starts a dev server if needed) |
 | `npx prisma migrate dev` | Create + apply a migration |
 | `npx prisma migrate deploy` | Apply migrations (CI / production) |
 | `npx prisma studio` | Browse the database |
