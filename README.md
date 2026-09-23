@@ -15,6 +15,22 @@ credentials-based authentication, and a dashboard for tracking generation activi
 
 ---
 
+## 📸 Screenshots
+
+**Generator workspace** — the three panels: brief input, live preview, and the generated hooks.
+
+![HookLab AI generator workspace](./docs/screenshots/generator-workspace.png)
+
+**Authentication** — credentials sign-in and sign-up share a single modal.
+
+![HookLab AI authentication modal](./docs/screenshots/auth-modal.png)
+
+**Mobile flow** — below `md` the panels become a linear flow with a persistent *Copy All* action.
+
+<img src="./docs/screenshots/mobile-flow.png" alt="HookLab AI mobile flow" width="330" />
+
+---
+
 ## ✨ Features
 
 **Generator workspace**
