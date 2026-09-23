@@ -190,12 +190,41 @@ prisma/
 | `npm run build` | Production build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | ESLint |
+| `npm test` | Smoke tests — the generation endpoint plus the hook flow in a real browser |
 | `npm run screenshots` | Regenerate the README screenshots (starts a dev server if needed) |
 | `npx prisma migrate dev` | Create + apply a migration |
 | `npx prisma migrate deploy` | Apply migrations (CI / production) |
 | `npx prisma studio` | Browse the database |
 
 `START_APP.bat` is included as a one-click dev-server launcher for Windows.
+
+---
+
+## 🧪 Testing
+
+```bash
+npm test
+```
+
+`tests/smoke.test.mjs` exercises the real app through the same harness the
+screenshot script uses — no test framework and no browser driver to install.
+
+**The generation endpoint**
+- returns three hooks built from the submitted brief,
+- passes the target audience through to the hooks,
+- answers `400` when the brief is incomplete.
+
+**The generate-hook flow, in a real Chrome**
+- the workspace renders in its empty state,
+- *Generate* stays disabled until both required fields are filled,
+- submitting the brief renders three hook cards with their copy / bookmark /
+  remix actions,
+- the auth modal opens from the navbar.
+
+Every browser test starts from a cold page, so the suite stays order independent.
+A dev server is started on demand and stopped afterwards, and the browser tests
+are skipped (with a message) when Chrome is not installed. Assertions count only
+*visible* hook cards, since both the desktop and mobile layouts live in the DOM.
 
 ---
 
